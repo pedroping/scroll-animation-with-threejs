@@ -10,6 +10,3 @@ A simple Three.js application that loads an OBJ model, adds a matcap material, a
 - **Textures**: Change the texture applied to the model by modifying the image used in the `TextureLoader`.
 - **Starfield**: Adjust the number of stars and other parameters in `getStarfield.js` for different visual effects.
 - **Scroll Animation**: Modify the scroll behavior by adjusting the `goalPos` and `rate` variables in the `animate` function.
-
-
-Watch the tutorial on [YouTube](https://youtu.be/1qpeo5ewz_8)
