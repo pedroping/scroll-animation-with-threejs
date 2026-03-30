@@ -2,12 +2,14 @@ import * as THREE from "three";
 import getLayer from "./libs/getLayer.js";
 import { OBJLoader } from "jsm/loaders/OBJLoader.js";
 import getStarfield from "./libs/getStarfield.js";
+
 const w = window.innerWidth;
 const h = window.innerHeight;
+let objectMesh;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 1000);
 camera.position.z = 5;
-const canvas = document.getElementById('three-canvas');
+const canvas = document.getElementById("three-canvas");
 const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
 renderer.setSize(w, h);
 
@@ -17,11 +19,13 @@ function initScene({ geo }) {
   geometry.center();
   const texLoader = new THREE.TextureLoader();
   const material = new THREE.MeshMatcapMaterial({
-    matcap: texLoader.load('./assets/blue.jpg'),
+    matcap: texLoader.load("./assets/blue.jpg"),
   });
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.position.set(1.5, -0.5, 0);
-  scene.add(mesh);
+  objectMesh = new THREE.Mesh(geometry, material);
+
+  objectMesh.position.set(window.innerWidth / 450, -0.5, 0);
+  objectMesh.rotation.y = -0.5;
+  scene.add(objectMesh);
 
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444);
   scene.add(hemiLight);
@@ -36,19 +40,20 @@ function initScene({ geo }) {
   });
   scene.add(gradientBackground);
 
-  const stars = getStarfield({ numStars: 4500 });
+  const stars = getStarfield({ numStars: 40500 });
   scene.add(stars);
 
   let goalPos = 0;
   const rate = 0.1;
+
   function animate() {
-    requestAnimationFrame(animate);
-    goalPos = Math.PI * scrollPosY;;
-    mesh.rotation.y -= (mesh.rotation.y - (goalPos * 1.0)) * rate;
+    goalPos = Math.PI * scrollPosY;
+    objectMesh.rotation.y -= (objectMesh.rotation.y - (goalPos - 0.5)) * rate;
     stars.position.z -= (stars.position.z - goalPos * 8) * rate;
     renderer.render(scene, camera);
   }
   animate();
+  renderer.setAnimationLoop(animate);
 }
 const manager = new THREE.LoadingManager();
 const loader = new OBJLoader(manager);
@@ -65,12 +70,13 @@ loader.load("./assets/astronaut.obj", (obj) => {
 });
 
 window.addEventListener("scroll", () => {
-  scrollPosY = (window.scrollY / document.body.clientHeight);
+  scrollPosY = window.scrollY / document.body.clientHeight;
 });
 
 function handleWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
+  objectMesh.position.set(window.innerWidth / 450, -0.5, 0);
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
-window.addEventListener('resize', handleWindowResize, false);
+window.addEventListener("resize", handleWindowResize, false);
