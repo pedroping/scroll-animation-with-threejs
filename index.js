@@ -48,8 +48,10 @@ function initScene({ geo }) {
 
   function animate() {
     goalPos = Math.PI * scrollPosY;
-    objectMesh.rotation.y -= (objectMesh.rotation.y - (goalPos - 0.5)) * rate;
-    stars.position.z -= (stars.position.z - goalPos * 8) * rate;
+    objectMesh.rotation.y -=
+      objectMesh.rotation.y - (goalPos - 0.5) + rate;
+    stars.position.z -= stars.position.z - goalPos * 8 + rate;
+
     renderer.render(scene, camera);
   }
   animate();
