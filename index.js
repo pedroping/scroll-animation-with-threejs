@@ -48,21 +48,26 @@ function initScene({ geo }) {
 
   function animate() {
     goalPos = Math.PI * scrollPosY;
-    objectMesh.rotation.y -=
-      objectMesh.rotation.y - (goalPos - 0.5) + rate;
+    objectMesh.rotation.y -= objectMesh.rotation.y - (goalPos - 0.5) + rate;
     stars.position.z -= stars.position.z - goalPos * 8 + rate;
 
     renderer.render(scene, camera);
   }
+
+  window.addEventListener("scroll", () => {
+    scrollPosY = window.scrollY / document.body.clientHeight;
+  });
+
   animate();
   renderer.setAnimationLoop(animate);
 }
 const manager = new THREE.LoadingManager();
 const loader = new OBJLoader(manager);
 let sceneData = {};
+
 manager.onLoad = () => initScene(sceneData);
 loader.load("./assets/astronaut.obj", (obj) => {
-  let geometry;
+  let geometry;  
   obj.traverse((child) => {
     if (child.type === "Mesh") {
       geometry = child.geometry;
@@ -71,14 +76,11 @@ loader.load("./assets/astronaut.obj", (obj) => {
   sceneData.geo = geometry;
 });
 
-window.addEventListener("scroll", () => {
-  scrollPosY = window.scrollY / document.body.clientHeight;
-});
-
 function handleWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   objectMesh.position.set(window.innerWidth / 450, -0.5, 0);
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
 window.addEventListener("resize", handleWindowResize, false);
