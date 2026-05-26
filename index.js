@@ -67,7 +67,7 @@ let sceneData = {};
 
 manager.onLoad = () => initScene(sceneData);
 loader.load("./assets/astronaut.obj", (obj) => {
-  let geometry;  
+  let geometry;
   obj.traverse((child) => {
     if (child.type === "Mesh") {
       geometry = child.geometry;
@@ -84,3 +84,73 @@ function handleWindowResize() {
 }
 
 window.addEventListener("resize", handleWindowResize, false);
+
+const speed = 0.08;
+
+let targetY = window.scrollY;
+let currentY = window.scrollY;
+let isDragging = false;
+
+window.addEventListener(
+  "wheel",
+  (e) => {
+    e.preventDefault();
+    targetY += e.deltaY;
+
+    const maxScroll =
+      document.documentElement.scrollHeight - window.innerHeight;
+    targetY = Math.max(0, Math.min(targetY, maxScroll));
+  },
+  { passive: false },
+);
+
+let startY, startScroll;
+
+window.addEventListener("mousedown", (e) => {
+  if (e.clientX >= document.documentElement.clientWidth) return;
+
+  isDragging = true;
+  startY = e.pageY;
+  startScroll = targetY;
+  document.body.style.cursor = "grabbing";
+});
+
+window.addEventListener("mousemove", (e) => {
+  if (!isDragging) return;
+  const delta = startY - e.pageY;
+  targetY = startScroll + delta;
+});
+
+window.addEventListener("mouseup", () => {
+  isDragging = false;
+  document.body.style.cursor = "default";
+});
+
+window.addEventListener("scroll", () => {
+  if (Math.abs(window.scrollY - currentY) > 5) {
+    if (!isDragging) {
+      targetY = window.scrollY;
+      currentY = window.scrollY;
+    }
+  }
+});
+
+function update() {
+  if (isMobileByWidth || isTouchDevice) return;
+
+  if (Math.abs(targetY - currentY) > 0.5) {
+    currentY += (targetY - currentY) * speed;
+    window.scrollTo(0, currentY);
+  }
+
+  requestAnimationFrame(update);
+}
+
+const isMobileByWidth = window.matchMedia(
+  "only screen and (max-width: 760px)",
+).matches;
+const isTouchDevice = window.matchMedia("(any-pointer:coarse)").matches;
+
+if (!isMobileByWidth && !isTouchDevice) {
+  requestAnimationFrame(update);
+}
