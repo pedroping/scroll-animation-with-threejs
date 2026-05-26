@@ -1,19 +1,27 @@
+import { OBJLoader } from "jsm/loaders/OBJLoader.js";
 import * as THREE from "three";
 import getLayer from "./libs/getLayer.js";
-import { OBJLoader } from "jsm/loaders/OBJLoader.js";
 import getStarfield from "./libs/getStarfield.js";
 
+const speed = 0.08;
 const w = window.innerWidth;
 const h = window.innerHeight;
-let objectMesh;
+const canvas = document.getElementById("three-canvas");
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 1000);
-camera.position.z = 5;
-const canvas = document.getElementById("three-canvas");
 const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
+
+let objectMesh;
+let scrollPosY = 0;
+let targetY = window.scrollY;
+let currentY = window.scrollY;
+let isDragging = false;
+let startY, startScroll;
+
+camera.position.z = 5;
 renderer.setSize(w, h);
 
-let scrollPosY = 0;
 function initScene({ geo }) {
   const geometry = geo;
   geometry.center();
@@ -85,12 +93,6 @@ function handleWindowResize() {
 
 window.addEventListener("resize", handleWindowResize, false);
 
-const speed = 0.08;
-
-let targetY = window.scrollY;
-let currentY = window.scrollY;
-let isDragging = false;
-
 window.addEventListener(
   "wheel",
   (e) => {
@@ -103,8 +105,6 @@ window.addEventListener(
   },
   { passive: false },
 );
-
-let startY, startScroll;
 
 window.addEventListener("mousedown", (e) => {
   if (e.clientX >= document.documentElement.clientWidth) return;
