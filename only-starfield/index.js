@@ -1,9 +1,15 @@
+import { GUI } from "jsm/libs/lil-gui.module.min.js";
 import * as THREE from "three";
 import getStarfield from "./getStarfield.js";
 
 const NUM_STARS = 25000;
+const MIN_STARS = 1000;
+const MAX_STARS = 100000;
+const STARS_STEP = 1000;
 const DEPTH = 120;
 const SPEED = 14;
+const MAX_SPEED = 80;
+const SPEED_STEP = 0.5;
 const STAR_SIZE = 0.5;
 const CORE_RADIUS = 6;
 const ROLL_SPEED = 0.03;
@@ -39,6 +45,7 @@ function tunnelRadius() {
 
 const starfield = getStarfield({
   numStars: NUM_STARS,
+  maxStars: MAX_STARS,
   depth: DEPTH,
   radius: tunnelRadius(),
   coreRadius: CORE_RADIUS,
@@ -46,6 +53,19 @@ const starfield = getStarfield({
   speed: SPEED,
 });
 scene.add(starfield.points);
+
+const params = { stars: NUM_STARS, speed: SPEED };
+const gui = new GUI({ title: "Starfield" });
+
+gui
+  .add(params, "stars", MIN_STARS, starfield.maxCount, STARS_STEP)
+  .name("Stars")
+  .onChange((value) => starfield.setCount(value));
+
+gui
+  .add(params, "speed", 0, MAX_SPEED, SPEED_STEP)
+  .name("Velocity")
+  .onChange((value) => starfield.setSpeed(value));
 
 const clock = new THREE.Clock();
 

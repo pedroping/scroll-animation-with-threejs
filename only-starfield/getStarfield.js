@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 export default function getStarfield({
   numStars = 25000,
+  maxStars = 100000,
   depth = 120,
   radius = 240,
   coreRadius = 6,
@@ -11,34 +12,43 @@ export default function getStarfield({
   saturation = 0.25,
   texturePath = "../assets/circle.png",
 } = {}) {
-  const verts = [];
-  const colors = [];
+  const maxCount = Math.max(maxStars, numStars);
+  let count = Math.min(numStars, maxCount);
+
+  const verts = new Float32Array(maxCount * 3);
+  const colors = new Float32Array(maxCount * 3);
   const color = new THREE.Color();
 
   const rMinSq = coreRadius * coreRadius;
   const rMaxSq = radius * radius;
 
-  for (let i = 0; i < numStars; i += 1) {
+  for (let i = 0; i < maxCount; i += 1) {
     const r = Math.sqrt(rMinSq + Math.random() * (rMaxSq - rMinSq));
     const theta = Math.random() * Math.PI * 2;
+    const o = i * 3;
 
-    verts.push(
-      Math.cos(theta) * r,
-      Math.sin(theta) * r,
-      -Math.random() * depth,
-    );
+    verts[o] = Math.cos(theta) * r;
+    verts[o + 1] = Math.sin(theta) * r;
+    verts[o + 2] = -Math.random() * depth;
 
     color.setHSL(
       hue + (Math.random() - 0.5) * 0.12,
       saturation,
       0.5 + Math.random() * 0.5,
     );
-    colors.push(color.r, color.g, color.b);
+
+    colors[o] = color.r;
+    colors[o + 1] = color.g;
+    colors[o + 2] = color.b;
   }
 
+  const attr = new THREE.BufferAttribute(verts, 3);
+  attr.setUsage(THREE.DynamicDrawUsage);
+
   const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
-  geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+  geo.setAttribute("position", attr);
+  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  geo.setDrawRange(0, count);
 
   const mat = new THREE.PointsMaterial({
     size,
@@ -53,22 +63,29 @@ export default function getStarfield({
 
   const points = new THREE.Points(geo, mat);
 
-  const attr = geo.attributes.position;
-  const arr = attr.array;
-
   return {
     points,
     material: mat,
+    maxCount,
 
     update(delta) {
       const dz = speed * delta;
+      if (count === 0 || dz === 0) return;
 
-      for (let i = 2; i < arr.length; i += 3) {
-        arr[i] += dz;
-        if (arr[i] > 0) arr[i] -= depth;
+      const end = count * 3;
+
+      for (let i = 2; i < end; i += 3) {
+        verts[i] += dz;
+        if (verts[i] > 0) verts[i] -= depth;
       }
 
+      attr.addUpdateRange(0, end);
       attr.needsUpdate = true;
+    },
+
+    setCount(next) {
+      count = Math.max(0, Math.min(Math.floor(next), maxCount));
+      geo.setDrawRange(0, count);
     },
 
     setSpeed(next) {
